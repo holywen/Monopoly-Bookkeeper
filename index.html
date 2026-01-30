@@ -761,7 +761,16 @@ const initialBalance = parseInt(document.getElementById('initialBalance').value)
                     alert('At least 2 players required to start the game');
                     return;
                 }
+
+                // Update all players' balances to the current starting balance
+                const initialBalance = parseInt(document.getElementById('initialBalance').value) || 1500;
+                this.players.forEach(player => {
+                    player.balance = initialBalance;
+                });
+
+                this.saveState();
                 this.switchScreen(2);
+                alert(`Game started! All players begin with $${initialBalance}.`);
             }
 
             resetPlayers() {
@@ -1208,6 +1217,9 @@ const initialBalance = parseInt(document.getElementById('initialBalance').value)
                     return;
                 }
 
+                // Update the initial balance input on the setup screen
+                document.getElementById('initialBalance').value = newBalance;
+
                 if (this.players.length > 0) {
                     if (confirm(`This will reset all players and set new starting balance to $${newBalance}. Continue?`)) {
                         this.players = [];
@@ -1242,15 +1254,15 @@ const initialBalance = parseInt(document.getElementById('initialBalance').value)
             }
 
             restartGame() {
-                if (confirm('Are you sure you want to restart the game? This will reset all player balances to their starting amounts.')) {
-                    const initialBalance = parseInt(document.getElementById('initialBalance').value) || 1500;
+                const initialBalance = parseInt(document.getElementById('initialBalance').value) || 1500;
+                if (confirm(`Are you sure you want to restart the game? This will reset all player balances to $${initialBalance}.`)) {
                     this.players.forEach(player => {
                         player.balance = initialBalance;
                     });
                     this.transactions = [];
                     this.saveState();
                     this.updateUI();
-                    alert('Game restarted! All balances reset to starting amount.');
+                    alert(`Game restarted! All balances reset to $${initialBalance}.`);
                 }
             }
 
