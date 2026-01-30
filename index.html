@@ -253,6 +253,26 @@
             margin-left: 8px;
         }
 
+        .delete-player-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--error-color);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+            min-height: auto;
+        }
+
+        .delete-player-btn:hover {
+            color: #d32f2f;
+            transform: scale(1.1);
+        }
+
         .player-token {
             width: 32px;
             height: 32px;
@@ -1002,9 +1022,8 @@ const initialBalance = parseInt(document.getElementById('initialBalance').value)
                                 <div class="player-name">${player.name}</div>
                                 <div class="player-balance">$${player.balance}</div>
                             </div>
-                            <button class="btn btn-error" onclick="game.deletePlayer('${player.id}')"
-                                style="background: var(--error-color); color: white; padding: 6px 12px; font-size: 12px; min-height: 32px; margin: 0;">
-                                Delete
+                            <button class="delete-player-btn" onclick="game.deletePlayer('${player.id}')" title="Delete player">
+                                🗑️
                             </button>
                         </div>
                     `).join('');
