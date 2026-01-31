@@ -698,6 +698,17 @@
             <!-- Voice Control Panel -->
             <div class="card voice-control">
                 <h3 style="margin-bottom: 12px;">🎤 语音控制</h3>
+
+                <!-- Language Mode Selection -->
+                <div style="margin-bottom: 12px;">
+                    <label style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 4px; display: block;">识别语言模式</label>
+                    <select id="voiceLanguageMode" style="width: 100%; padding: 8px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: white;">
+                        <option value="zh-CN">中文优先 (推荐)</option>
+                        <option value="en-US">英文优先</option>
+                        <option value="auto">自动检测</option>
+                    </select>
+                </div>
+
                 <button id="voiceBtn" class="voice-btn">
                     <span class="mic-icon">🎤</span>
                     <span class="voice-text">按住说话</span>
@@ -715,6 +726,7 @@
                         <li>• "Vivian转给Justin 50K"</li>
                         <li>• "给Resin增加200K"</li>
                         <li>• "从Eason减少100K"</li>
+                        <li>• "Eason transfer to Holy 100K" (英文模式)</li>
                     </ul>
                 </div>
             </div>
@@ -1594,16 +1606,28 @@
                 this.recognition.lang = 'zh-CN';
                 this.recognition.continuous = false;
                 this.recognition.interimResults = true;
-                this.recognition.maxAlternatives = 1;
+                this.recognition.maxAlternatives = 3; // Increase alternatives for better matching
 
                 this.recognition.onresult = (event) => {
                     const result = event.results[event.results.length - 1];
-                    const transcript = result[0].transcript;
 
                     if (result.isFinal) {
-                        this.processVoiceCommand(transcript);
+                        // Try all alternatives for better recognition
+                        for (let i = 0; i < result.length; i++) {
+                            const transcript = result[i].transcript;
+                            console.log(`Voice alternative ${i}: "${transcript}"`);
+
+                            const command = this.parseVoiceCommand(transcript);
+                            if (command) {
+                                this.processVoiceCommand(transcript, command);
+                                return;
+                            }
+                        }
+
+                        // If no alternative worked, try with the first result
+                        this.processVoiceCommand(result[0].transcript);
                     } else {
-                        this.showInterimResult(transcript);
+                        this.showInterimResult(result[0].transcript);
                     }
                 };
 
@@ -1634,6 +1658,12 @@
 
             setupVoiceUI() {
                 const voiceBtn = document.getElementById('voiceBtn');
+                const languageMode = document.getElementById('voiceLanguageMode');
+
+                // Language mode change handler
+                languageMode.addEventListener('change', () => {
+                    this.updateVoiceLanguage();
+                });
 
                 // Mouse events for desktop
                 voiceBtn.addEventListener('mousedown', () => this.startVoiceListening());
@@ -1662,6 +1692,30 @@
                 document.getElementById('voiceCancelBtn').addEventListener('click', () => {
                     this.hideVoiceConfirmDialog();
                 });
+            }
+
+            updateVoiceLanguage() {
+                const languageMode = document.getElementById('voiceLanguageMode').value;
+
+                switch (languageMode) {
+                    case 'zh-CN':
+                        this.recognition.lang = 'zh-CN';
+                        this.showInterimResult('已切换到中文识别模式');
+                        break;
+                    case 'en-US':
+                        this.recognition.lang = 'en-US';
+                        this.showInterimResult('已切换到英文识别模式');
+                        break;
+                    case 'auto':
+                        this.recognition.lang = 'zh-CN'; // Default to Chinese, but patterns handle both
+                        this.showInterimResult('自动检测模式（推荐用于中英混合）');
+                        break;
+                }
+
+                setTimeout(() => {
+                    document.getElementById('voiceResult').innerHTML =
+                        '<span style="color: rgba(255,255,255,0.6);">按住按钮说出转账命令</span>';
+                }, 2000);
             }
 
             startVoiceListening() {
@@ -1704,18 +1758,90 @@
                 }, 3000);
             }
 
-            processVoiceCommand(transcript) {
-                const command = this.parseVoiceCommand(transcript);
+            processVoiceCommand(transcript, preParsedCommand = null) {
+                const command = preParsedCommand || this.parseVoiceCommand(transcript);
 
                 if (command) {
+                    // Validate that players exist
+                    const validationError = this.validateVoiceCommand(command);
+                    if (validationError) {
+                        this.showVoiceError(validationError);
+                        return;
+                    }
+
                     this.pendingVoiceCommand = command;
                     this.showVoiceConfirmDialog(command);
                 } else {
-                    this.showVoiceError('无法识别命令，请重试');
+                    // Provide helpful feedback based on what was said
+                    const feedback = this.generateVoiceFeedback(transcript);
+                    this.showVoiceError(feedback);
                 }
             }
 
+            validateVoiceCommand(command) {
+                if (command.type === 'transfer') {
+                    const fromPlayer = this.findPlayerByName(command.from);
+                    const toPlayer = this.findPlayerByName(command.to);
+
+                    if (!fromPlayer && !toPlayer) {
+                        return `找不到玩家: ${command.from} 和 ${command.to}`;
+                    }
+                    if (!fromPlayer) {
+                        return `找不到玩家: ${command.from}`;
+                    }
+                    if (!toPlayer) {
+                        return `找不到玩家: ${command.to}`;
+                    }
+                    if (fromPlayer.id === toPlayer.id) {
+                        return '不能转账给自己';
+                    }
+                } else if (command.type === 'adjust') {
+                    const player = this.findPlayerByName(command.player);
+                    if (!player) {
+                        return `找不到玩家: ${command.player}`;
+                    }
+                }
+
+                return null;
+            }
+
+            generateVoiceFeedback(transcript) {
+                const lowerTranscript = transcript.toLowerCase();
+
+                // Check if it contains player names but wrong pattern
+                const knownPlayers = this.players.map(p => p.name.toLowerCase());
+                const mentionedPlayers = knownPlayers.filter(name =>
+                    lowerTranscript.includes(name)
+                );
+
+                if (mentionedPlayers.length > 0) {
+                    return `识别到玩家: ${mentionedPlayers.join(', ')}，请检查命令格式`;
+                }
+
+                // Check if it has numbers but no clear pattern
+                const hasNumbers = /\d+/.test(transcript);
+                const hasUnit = /[km]/i.test(transcript);
+
+                if (hasNumbers && hasUnit) {
+                    return '识别到金额，请检查玩家名称和命令格式';
+                }
+
+                // Check if it's in English but we're expecting Chinese
+                const englishWords = transcript.match(/[a-zA-Z]+/g);
+                const chineseWords = transcript.match(/[\u4e00-\u9fa5]+/g);
+
+                if (englishWords && englishWords.length > 0 && !chineseWords) {
+                    return '请使用中文命令格式，如："Eason转给Holy 100K"';
+                }
+
+                return '无法识别命令，请参考示例格式';
+            }
+
             parseVoiceCommand(text) {
+                // Pre-process text to handle common recognition errors
+                const cleanedText = this.preprocessVoiceText(text);
+                console.log(`Original: "${text}" -> Cleaned: "${cleanedText}"`);
+
                 // Chinese number mapping
                 const chineseNumbers = {
                     '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
@@ -1737,71 +1863,52 @@
                     return converted;
                 };
 
-                // Pattern for transfer commands (with separate groups for names and numbers)
+                // Enhanced patterns for transfer commands
                 const transferPatterns = [
-                    {
-                        regex: /(.+?)转给(.+?)(\d+)([KM])/i,
-                        type: 'transfer'
-                    },
-                    {
-                        regex: /(.+?)给(.+?)转(\d+)([KM])/i,
-                        type: 'transfer'
-                    },
-                    {
-                        regex: /(.+?)支付给(.+?)(\d+)([KM])/i,
-                        type: 'transfer'
-                    },
-                    {
-                        regex: /(.+?)转账给(.+?)(\d+)([KM])/i,
-                        type: 'transfer'
-                    }
+                    // Chinese patterns
+                    { regex: /(.+?)转给(.+?)(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)给(.+?)转(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)支付给(.+?)(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)转账给(.+?)(\d+)([KM])/i, type: 'transfer' },
+                    // Mixed patterns - more flexible
+                    { regex: /(.+?)transfer\s*to\s*(.+?)(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)send\s*to\s*(.+?)(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)给(.+?)(\d+)([KM])/i, type: 'transfer' }, // Simplified
+                    // English patterns
+                    { regex: /(.+?)transfer\s*(.+?)\s*(\d+)([KM])/i, type: 'transfer' },
+                    { regex: /(.+?)send\s*(.+?)\s*(\d+)([KM])/i, type: 'transfer' }
                 ];
 
-                // Pattern for adjustment commands
+                // Enhanced patterns for adjustment commands
                 const adjustPatterns = [
-                    {
-                        regex: /给(.+?)增加(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'add'
-                    },
-                    {
-                        regex: /给(.+?)加上(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'add'
-                    },
-                    {
-                        regex: /给(.+?)添加(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'add'
-                    },
-                    {
-                        regex: /从(.+?)减少(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'subtract'
-                    },
-                    {
-                        regex: /从(.+?)扣除(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'subtract'
-                    },
-                    {
-                        regex: /从(.+?)减去(\d+)([KM])/i,
-                        type: 'adjust',
-                        adjustType: 'subtract'
-                    }
+                    // Chinese patterns
+                    { regex: /给(.+?)增加(\d+)([KM])/i, type: 'adjust', adjustType: 'add' },
+                    { regex: /给(.+?)加上(\d+)([KM])/i, type: 'adjust', adjustType: 'add' },
+                    { regex: /给(.+?)添加(\d+)([KM])/i, type: 'adjust', adjustType: 'add' },
+                    { regex: /从(.+?)减少(\d+)([KM])/i, type: 'adjust', adjustType: 'subtract' },
+                    { regex: /从(.+?)扣除(\d+)([KM])/i, type: 'adjust', adjustType: 'subtract' },
+                    { regex: /从(.+?)减去(\d+)([KM])/i, type: 'adjust', adjustType: 'subtract' },
+                    // Mixed/English patterns
+                    { regex: /(.+?)add\s*(\d+)([KM])/i, type: 'adjust', adjustType: 'add' },
+                    { regex: /(.+?)give\s*(\d+)([KM])/i, type: 'adjust', adjustType: 'add' },
+                    { regex: /(.+?)subtract\s*(\d+)([KM])/i, type: 'adjust', adjustType: 'subtract' },
+                    { regex: /(.+?)take\s*(\d+)([KM])/i, type: 'adjust', adjustType: 'subtract' }
                 ];
 
                 // Try to match transfer patterns
                 for (let pattern of transferPatterns) {
-                    const match = text.match(pattern.regex);
+                    const match = cleanedText.match(pattern.regex);
                     if (match) {
-                        // Convert only the number part, keep player names as-is
                         const convertedNumber = convertChineseNumbers(match[3]);
+                        const amount = parseInt(convertedNumber);
+
+                        if (isNaN(amount) || amount <= 0) continue;
+
                         return {
                             type: 'transfer',
-                            from: match[1].trim(),
-                            to: match[2].trim(),
-                            amount: parseInt(convertedNumber),
+                            from: this.cleanPlayerName(match[1].trim()),
+                            to: this.cleanPlayerName(match[2].trim()),
+                            amount: amount,
                             unit: match[4].toUpperCase(),
                             originalText: text
                         };
@@ -1810,14 +1917,17 @@
 
                 // Try to match adjustment patterns
                 for (let pattern of adjustPatterns) {
-                    const match = text.match(pattern.regex);
+                    const match = cleanedText.match(pattern.regex);
                     if (match) {
-                        // Convert only the number part, keep player name as-is
                         const convertedNumber = convertChineseNumbers(match[2]);
+                        const amount = parseInt(convertedNumber);
+
+                        if (isNaN(amount) || amount <= 0) continue;
+
                         return {
                             type: 'adjust',
-                            player: match[1].trim(),
-                            amount: parseInt(convertedNumber),
+                            player: this.cleanPlayerName(match[1].trim()),
+                            amount: amount,
                             unit: match[3].toUpperCase(),
                             adjustType: pattern.adjustType,
                             originalText: text
@@ -1826,6 +1936,45 @@
                 }
 
                 return null;
+            }
+
+            preprocessVoiceText(text) {
+                // Common voice recognition error corrections
+                const corrections = {
+                    '伊森': 'Eason',
+                    '霍利': 'Holy',
+                    '薇薇安': 'Vivian',
+                    '贾斯汀': 'Justin',
+                    '瑞辛': 'Resin',
+                    '一森': 'Eason',
+                    '霍里': 'Holy',
+                    '维维': 'Vivian',
+                    '贾斯丁': 'Justin',
+                    '瑞森': 'Resin'
+                };
+
+                let cleaned = text.toLowerCase();
+
+                // Apply corrections
+                Object.entries(corrections).forEach(([wrong, correct]) => {
+                    cleaned = cleaned.replace(new RegExp(wrong, 'gi'), correct);
+                });
+
+                // Remove filler words and common recognition artifacts
+                const fillerWords = ['呃', '嗯', '那个', '这个', '就是', '我要', '我想', '请'];
+                fillerWords.forEach(word => {
+                    cleaned = cleaned.replace(new RegExp(word, 'gi'), '');
+                });
+
+                // Normalize spaces
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+                return cleaned;
+            }
+
+            cleanPlayerName(name) {
+                // Remove common articles and prepositions from names
+                return name.replace(/^(a|an|the)\s+/i, '').trim();
             }
 
             showVoiceConfirmDialog(command) {
