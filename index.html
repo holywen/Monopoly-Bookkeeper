@@ -719,21 +719,16 @@
                     <!-- LLM Provider Selection -->
                     <select id="llmProvider" style="width: 100%; padding: 8px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: white; margin-bottom: 8px;">
                         <option value="mock">本地模拟 (无需API)</option>
-                        <option value="openrouter">OpenRouter (推荐)</option>
+                        <option value="openrouter">OpenRouter</option>
                         <option value="anthropic">Anthropic Claude</option>
                         <option value="openai">OpenAI</option>
-                        <option value="nvidia">NVIDIA Build (需要代理)</option>
+                        <option value="nvidia">NVIDIA Build (NIM)</option>
                     </select>
 
                     <!-- API Key Input (hidden for mock mode) -->
                     <div id="apiKeySection" style="display: none;">
                         <input type="password" id="llmApiKey" placeholder="输入API密钥" style="width: 100%; padding: 8px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: white; margin-bottom: 8px;">
                         <button id="testLlmBtn" style="width: 100%; padding: 6px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; background: rgba(255,255,255,0.2); color: white; font-size: 12px;">测试连接</button>
-
-                        <!-- NVIDIA Proxy Notice -->
-                        <div id="nvidiaNotice" style="display: none; margin-top: 8px; padding: 8px; background: rgba(255,152,0,0.2); border-radius: 4px; font-size: 11px; color: rgba(255,255,255,0.9);">
-                            ⚠️ NVIDIA API需要CORS代理。请先访问 https://cors-anywhere.herokuapp.com/corsdemo 点击"Request temporary access to the demo server"
-                        </div>
                     </div>
 
                     <!-- Enable/Disable Toggle -->
@@ -2356,20 +2351,14 @@
             }
 
             async callNVIDIAAPI(prompt, apiKey) {
-                // NVIDIA API doesn't support CORS from browser, so we'll use a CORS proxy
-                // You can use any public CORS proxy or set up your own
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // Public proxy (for testing only)
-                const nvidiaUrl = 'https://integrate.api.nvidia.com/v1/chat/completions';
-
-                const response = await fetch(proxyUrl + nvidiaUrl, {
+                const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: 'deepseek-ai/deepseek-v3.2',
+                        model: 'meta/llama-3.1-8b-instruct',
                         messages: [{ role: 'user', content: prompt }],
                         max_tokens: 100,
                         temperature: 0.1,
@@ -2380,7 +2369,7 @@
 
                 if (!response.ok) {
                     const error = await response.text();
-                    throw new Error(`NVIDIA API error: ${response.status} - ${error}. Note: NVIDIA API requires a CORS proxy for browser usage.`);
+                    throw new Error(`NVIDIA API error: ${response.status} - ${error}`);
                 }
 
                 const data = await response.json();
@@ -2487,29 +2476,19 @@
                 const provider = document.getElementById('llmProvider').value;
                 const apiKeySection = document.getElementById('apiKeySection');
                 const apiKeyInput = document.getElementById('llmApiKey');
-                const nvidiaNotice = document.getElementById('nvidiaNotice');
 
                 if (provider === 'mock') {
                     apiKeySection.style.display = 'none';
-                    nvidiaNotice.style.display = 'none';
                 } else {
                     apiKeySection.style.display = 'block';
                     // Load saved API key
                     apiKeyInput.value = this.getApiKey();
-
-                    // Show NVIDIA notice if NVIDIA is selected
-                    if (provider === 'nvidia') {
-                        nvidiaNotice.style.display = 'block';
-                    } else {
-                        nvidiaNotice.style.display = 'none';
-                    }
                 }
             }
 
             async testLLMConnection() {
                 const testBtn = document.getElementById('testLlmBtn');
                 const originalText = testBtn.textContent;
-                const provider = document.getElementById('llmProvider').value;
 
                 testBtn.textContent = '测试中...';
                 testBtn.disabled = true;
@@ -2529,19 +2508,7 @@
                     testBtn.textContent = '❌ 连接失败';
                     testBtn.style.background = 'rgba(244, 67, 54, 0.3)';
                     this.updateLLMStatus('连接失败', '#f44336');
-
-                    // Provide specific error guidance
-                    let errorMsg = error.message;
-                    if (provider === 'nvidia' && error.message.includes('CORS')) {
-                        errorMsg = 'NVIDIA API需要CORS代理，请按说明配置代理服务';
-                    } else if (provider === 'anthropic' && error.message.includes('CORS')) {
-                        errorMsg = 'Anthropic API可能有CORS限制，建议使用OpenRouter';
-                    } else if (provider === 'openai' && error.message.includes('CORS')) {
-                        errorMsg = 'OpenAI API可能有CORS限制，建议使用OpenRouter';
-                    }
-
                     console.error('LLM test failed:', error);
-                    this.showVoiceError(errorMsg);
                 }
 
                 setTimeout(() => {

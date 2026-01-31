@@ -7,10 +7,10 @@ The AI voice correction feature supports multiple LLM providers. API keys are st
 1. **Open the voice control panel** in the Monopoly game
 2. **Select your preferred LLM provider**:
    - **本地模拟 (Local Mock)**: No API key required, provides basic corrections
-   - **OpenRouter (推荐)**: Supports multiple models, easy to use, no CORS issues
+   - **OpenRouter**: Supports multiple models, easy to use
    - **Anthropic Claude**: High-quality corrections
    - **OpenAI**: GPT-based corrections
-   - **NVIDIA Build (NIM)**: Fast, affordable, but requires CORS proxy
+   - **NVIDIA Build (NIM)**: Fast, affordable, open-source models
 
 3. **Enter your API key** (if not using Local Mock):
    - API keys are stored in browser localStorage only
@@ -45,8 +45,7 @@ The AI voice correction feature supports multiple LLM providers. API keys are st
 3. Get your API key from the NIM section
 4. Cost: Free tier available, very affordable paid plans
 5. Models: Llama, Mistral, and other open-source models
-6. ⚠️ **CORS限制**: 需要代理服务器才能在浏览器中使用
-7. **解决方案**: 访问 https://cors-anywhere.herokuapp.com/corsdemo 点击"Request temporary access"
+6. Note: May have CORS limitations in browser environment
 
 ## Security Features
 
