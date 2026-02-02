@@ -382,11 +382,13 @@ class MonopolyBookkeeper {
         body.innerHTML = `
             <div class="amount-input-group">
                 <label>从 ${fromPlayer.name} 转账到 ${toPlayer.name}</label>
-                <input type="number" id="transfer-amount" placeholder="输入转账金额" min="0" step="1">
-                <div class="unit-toggle">
-                    <div class="toggle-container">
-                        <button class="toggle-option active" data-unit="M">百万(M)</button>
-                        <button class="toggle-option" data-unit="K">千(K)</button>
+                <div class="amount-input-row">
+                    <input type="number" id="transfer-amount" placeholder="输入转账金额" min="0" step="1">
+                    <div class="unit-toggle">
+                        <div class="toggle-container">
+                            <button class="toggle-option active" data-unit="M">百万(M)</button>
+                            <button class="toggle-option" data-unit="K">千(K)</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -450,11 +452,13 @@ class MonopolyBookkeeper {
         body.innerHTML = `
             <div class="amount-input-group">
                 <label>${player.name} 当前余额: ${this.formatAmount(currentBalance)}</label>
-                <input type="number" id="edit-amount" placeholder="输入变动金额" min="0" step="1" value="0">
-                <div class="unit-toggle">
-                    <div class="toggle-container">
-                        <button class="toggle-option active" data-unit="M">百万(M)</button>
-                        <button class="toggle-option" data-unit="K">千(K)</button>
+                <div class="amount-input-row">
+                    <input type="number" id="edit-amount" placeholder="输入变动金额" min="0" step="1" value="0">
+                    <div class="unit-toggle">
+                        <div class="toggle-container">
+                            <button class="toggle-option active" data-unit="M">百万(M)</button>
+                            <button class="toggle-option" data-unit="K">千(K)</button>
+                        </div>
                     </div>
                 </div>
                 <div class="operation-toggle">
@@ -541,11 +545,13 @@ class MonopolyBookkeeper {
             </div>
             <div class="amount-input-group">
                 <label>初始余额 (可选，默认为${defaultAmount}${this.amountUnit})</label>
-                <input type="number" id="new-player-balance" placeholder="留空则使用默认初始金额" min="0" step="1">
-                <div class="unit-toggle">
-                    <div class="toggle-container">
-                        <button class="toggle-option active" data-unit="M">百万(M)</button>
-                        <button class="toggle-option" data-unit="K">千(K)</button>
+                <div class="amount-input-row">
+                    <input type="number" id="new-player-balance" placeholder="留空则使用默认初始金额" min="0" step="1">
+                    <div class="unit-toggle">
+                        <div class="toggle-container">
+                            <button class="toggle-option active" data-unit="M">百万(M)</button>
+                            <button class="toggle-option" data-unit="K">千(K)</button>
+                        </div>
                     </div>
                 </div>
             </div>
