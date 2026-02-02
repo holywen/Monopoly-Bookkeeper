@@ -30,6 +30,7 @@ A modern, web-based digital ledger for tracking Monopoly game finances. Perfect 
 
 ## 🚀 Quick Start
 
+### Web Version
 1. **Clone or download** the repository
 2. **Open `index.html`** in any modern web browser
 3. **Set up your game**:
@@ -38,7 +39,17 @@ A modern, web-based digital ledger for tracking Monopoly game finances. Perfect 
 4. **Start playing**: Click "Start Game" to begin
 5. **Track transactions**: Use drag-and-drop or direct balance adjustments
 
+### PWA Version (Mobile App)
+1. **Generate icons**: Open `icon-generator.html` and click "Generate All Icons"
+2. **Save all downloaded PNG files** to the project root directory
+3. **Open `index.html`** in mobile browser
+4. **Install to home screen**:
+   - **iOS**: Safari → Share → "Add to Home Screen"
+   - **Android**: Chrome → Menu → "Add to Home Screen"
+
 No installation, no dependencies, no build process required! 🎯
+
+**🌟 PWA Benefits**: Offline access, full-screen experience, instant loading, native app feel!
 
 ## 🎯 How to Use
 
@@ -125,7 +136,9 @@ Monopoly-Bookkeeper/
 - **Cross-Platform**: Works on any device with a browser
 - **Privacy First**: All data stored locally, nothing transmitted
 - **Offline Ready**: Works without internet connection
-- **Professional UI**: Modern, intuitive design
+- **PWA Enabled**: Install as native app on mobile devices
+- **Professional UI**: Modern, intuitive design with custom icons
+- **Full-Screen Experience**: Native app-like interface
 
 ## 📄 License
 

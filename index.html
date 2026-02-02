@@ -4,7 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大富翁记账</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#5a67d8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Monopoly">
+    <meta name="application-name" content="Monopoly Bookkeeper">
+    <meta name="msapplication-TileColor" content="#5a67d8">
+    <meta name="msapplication-config" content="browserconfig.xml">
+
+    <!-- SEO and Social -->
+    <meta name="description" content="A modern digital ledger for tracking Monopoly game finances. Perfect for keeping track of player balances and transactions.">
+    <meta name="keywords" content="monopoly, game, finance, ledger, bookkeeper, money tracking">
+    <meta name="author" content="Monopoly Bookkeeper">
+
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install button or banner
+            setTimeout(() => {
+                if (deferredPrompt && !localStorage.getItem('pwa-dismissed')) {
+                    showInstallPrompt();
+                }
+            }, 3000);
+        });
+
+        function showInstallPrompt() {
+            const promptDiv = document.createElement('div');
+            promptDiv.id = 'pwa-install-prompt';
+            promptDiv.innerHTML = `
+                <div class="pwa-prompt-content">
+                    <span>📱 安装应用到桌面</span>
+                    <div class="pwa-prompt-buttons">
+                        <button onclick="installPWA()">安装</button>
+                        <button onclick="dismissPWA()">稍后</button>
+                    </div>
+                </div>
+            `;
+            promptDiv.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 25px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                z-index: 10000;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                animation: slideUp 0.3s ease;
+            `;
+
+            document.body.appendChild(promptDiv);
+
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideUp {
+                    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+                .pwa-prompt-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+                .pwa-prompt-buttons {
+                    display: flex;
+                    gap: 8px;
+                }
+                .pwa-prompt-buttons button {
+                    padding: 6px 12px;
+                    border: none;
+                    border-radius: 15px;
+                    background: rgba(255,255,255,0.2);
+                    color: white;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: background 0.2s;
+                }
+                .pwa-prompt-buttons button:hover {
+                    background: rgba(255,255,255,0.3);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function installPWA() {
+            const prompt = document.getElementById('pwa-install-prompt');
+            if (prompt) prompt.remove();
+
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        function dismissPWA() {
+            localStorage.setItem('pwa-dismissed', 'true');
+            const prompt = document.getElementById('pwa-install-prompt');
+            if (prompt) prompt.remove();
+        }
+    </script>
 </head>
 <body>
     <div id="app">

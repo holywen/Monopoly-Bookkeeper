@@ -148,6 +148,27 @@ The application supports Chinese (zh-CN) and English (en) with:
 - Game logs are managed separately from player data
 - Language preferences are automatically saved and restored
 
+## Progressive Web App (PWA)
+
+### PWA Features
+- **Service Worker**: Offline caching and background sync
+- **Web App Manifest**: Installable app configuration
+- **App-like Experience**: Full-screen mode with custom theme
+- **Offline Support**: Complete functionality without network
+- **Install Prompts**: Automatic installation suggestions
+
+### PWA Files
+- `manifest.json` - App configuration and metadata
+- `sw.js` - Service Worker for offline caching
+- `icon-generator.html` - Icon generation tool
+- Various PNG icons (16x16 to 512x512)
+
+### Icon Management
+- Use `icon-generator.html` to create all required icon sizes
+- Icons use dice and dollar sign theme matching the app
+- Supports both regular and maskable formats
+- Includes favicon, Apple touch, and PWA icons
+
 ## Technical Considerations
 
 ### Performance
@@ -155,6 +176,7 @@ The application supports Chinese (zh-CN) and English (en) with:
 - Efficient DOM manipulation with targeted updates
 - Smart amount formatting with caching
 - Minimal localStorage usage
+- Service Worker caching for instant loading
 
 ### Browser Compatibility
 - Vanilla JavaScript ensures broad compatibility
