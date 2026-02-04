@@ -16,9 +16,12 @@ const i18n = {
             clearData: '清除所有数据',
             saveGame: '保存游戏',
             restartGame: '重新开始',
-            addPlayerGame: '添加玩家',
-            saveGame: '保存游戏',
-            clearHistory: '清除记录'
+            addPlayerGame: '添加新玩家',
+            transfer: '转账',
+            confirmTransfer: '确认转账',
+            clearHistory: '清除记录',
+            confirm: '确认',
+            cancel: '取消'
         },
         labels: {
             playerName: '输入玩家名称',
@@ -49,7 +52,8 @@ const i18n = {
             confirmClearData: '确定要清除所有数据吗？这将删除所有玩家信息、游戏历史、操作日志和设置。此操作不可恢复！',
             allDataCleared: '所有数据已清除',
             gameSaved: '游戏已保存',
-            confirmClearHistory: '确定要清除当前游戏的操作记录吗？'
+            confirmClearHistory: '确定要清除当前游戏的操作记录吗？',
+            confirmRestart: '确定要重新开始游戏吗？所有余额将被重置。'
         },
         gameLog: {
             gameStart: '游戏开始，初始金额 {initialAmount}{unit}',
@@ -62,6 +66,10 @@ const i18n = {
         units: {
             thousand: '千(K)',
             million: '百万(M)'
+        },
+        operations: {
+            add: '增加 +',
+            subtract: '减少 -'
         }
     },
     en: {
@@ -80,9 +88,12 @@ const i18n = {
             clearData: 'Clear All Data',
             saveGame: 'Save Game',
             restartGame: 'Restart Game',
-            addPlayerGame: 'Add Player',
-            saveGame: 'Save Game',
-            clearHistory: 'Clear Records'
+            addPlayerGame: 'Add New Player',
+            transfer: 'Transfer',
+            confirmTransfer: 'Confirm Transfer',
+            clearHistory: 'Clear Records',
+            confirm: 'Confirm',
+            cancel: 'Cancel'
         },
         labels: {
             playerName: 'Player Name',
@@ -113,7 +124,8 @@ const i18n = {
             confirmClearData: 'Clear all data? This will delete all player info, game history, operation logs and settings. This action cannot be undone!',
             allDataCleared: 'All data cleared',
             gameSaved: 'Game saved',
-            confirmClearHistory: 'Clear current game records?'
+            confirmClearHistory: 'Clear current game records?',
+            confirmRestart: 'Restart game? All balances will be reset.'
         },
         gameLog: {
             gameStart: 'Game started, initial amount {initialAmount}{unit}',
@@ -126,6 +138,10 @@ const i18n = {
         units: {
             thousand: 'K (Thousand)',
             million: 'M (Million)'
+        },
+        operations: {
+            add: 'Add +',
+            subtract: 'Subtract -'
         }
     }
 };

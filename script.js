@@ -168,6 +168,12 @@ class MonopolyBookkeeper {
             this.renderPlayersGrid();
             this.updateGameHistory();
         }
+
+        // 如果有打开的模态框，更新模态框内容
+        const modal = document.getElementById('modal-overlay');
+        if (modal && !modal.classList.contains('hidden')) {
+            this.updateModalContent();
+        }
     }
 
     updateLanguageButtons() {
@@ -188,6 +194,131 @@ class MonopolyBookkeeper {
                 btn.classList.add('active');
             }
         });
+    }
+
+    updateModalContent() {
+        const modal = document.getElementById('modal-overlay');
+        const title = document.getElementById('modal-title');
+        const body = document.getElementById('modal-body');
+
+        if (!title || !body) return;
+
+        // 根据模态框类型判断并更新内容
+        const modalType = title.dataset.modalType;
+
+        // 更新模态框标题
+        if (modalType === 'transfer') {
+            title.textContent = i18n[this.currentLang].buttons.transfer;
+        } else if (modalType === 'editBalance') {
+            // 从label中获取玩家名称来更新标题
+            const label = body.querySelector('label');
+            if (label && label.dataset.playerName) {
+                const playerName = label.dataset.playerName;
+                title.textContent = i18n[this.currentLang].labels.editBalance.replace('{playerName}', playerName);
+            }
+        } else if (modalType === 'addPlayer') {
+            title.textContent = i18n[this.currentLang].buttons.addPlayerGame;
+        }
+
+        if (modalType === 'transfer') {
+            // 转账模态框
+            const label = body.querySelector('label');
+            const input = body.querySelector('input[type="number"]');
+            const unitBtns = body.querySelectorAll('.toggle-option[data-unit]');
+            const confirmBtn = body.querySelector('button.confirm');
+            const cancelBtn = body.querySelector('button.cancel');
+
+            // 更新标题
+            title.textContent = i18n[this.currentLang].buttons.transfer;
+
+            // 更新标签文本
+            if (label && label.dataset.fromPlayer && label.dataset.toPlayer) {
+                const fromPlayer = label.dataset.fromPlayer;
+                const toPlayer = label.dataset.toPlayer;
+                label.textContent = i18n[this.currentLang].gameLog.transfer
+                    .replace('{fromPlayer}', fromPlayer)
+                    .replace('{toPlayer}', toPlayer)
+                    .replace('{amount}', '')
+                    .replace('{unit}', '');
+            }
+
+            // 更新输入框占位符
+            if (input) {
+                input.placeholder = i18n[this.currentLang].placeholders.editAmount;
+            }
+
+            // 更新单位按钮文字
+            unitBtns.forEach(btn => {
+                const unit = btn.dataset.unit;
+                btn.textContent = i18n[this.currentLang].units[unit === 'M' ? 'million' : 'thousand'];
+            });
+
+            // 更新按钮文字
+            if (confirmBtn) confirmBtn.textContent = i18n[this.currentLang].buttons.confirm;
+            if (cancelBtn) cancelBtn.textContent = i18n[this.currentLang].buttons.cancel;
+        } else if (modalType === 'editBalance') {
+            // 余额调整模态框
+            const label = body.querySelector('label');
+            const input = body.querySelector('input[type="number"]');
+            const unitBtns = body.querySelectorAll('.toggle-option[data-unit]');
+            const operationBtns = body.querySelectorAll('.toggle-option[data-operation]');
+            const confirmBtn = body.querySelector('button.confirm');
+            const cancelBtn = body.querySelector('button.cancel');
+
+            // 更新标签文本
+            if (label && label.dataset.playerName) {
+                const playerName = label.dataset.playerName;
+                const currentBalance = parseFloat(label.dataset.currentBalance);
+                title.textContent = i18n[this.currentLang].labels.editBalance.replace('{playerName}', playerName);
+                label.textContent = i18n[this.currentLang].labels.editBalance.replace('{playerName}', playerName) + ': ' + game.formatAmount(currentBalance);
+            }
+
+            // 更新输入框占位符
+            if (input) {
+                input.placeholder = i18n[this.currentLang].placeholders.editAmount;
+            }
+
+            // 更新单位按钮文字
+            unitBtns.forEach(btn => {
+                const unit = btn.dataset.unit;
+                btn.textContent = i18n[this.currentLang].units[unit === 'M' ? 'million' : 'thousand'];
+            });
+
+            // 更新操作按钮文字
+            operationBtns.forEach(btn => {
+                const operation = btn.dataset.operation;
+                btn.textContent = i18n[this.currentLang].operations[operation];
+            });
+
+            // 更新按钮文字
+            if (confirmBtn) confirmBtn.textContent = i18n[this.currentLang].buttons.confirm;
+            if (cancelBtn) cancelBtn.textContent = i18n[this.currentLang].buttons.cancel;
+        } else if (modalType === 'addPlayer') {
+            // 添加玩家模态框
+            const nameInput = body.querySelector('input[type="text"]');
+            const balanceInput = body.querySelector('input[type="number"]');
+            const unitBtns = body.querySelectorAll('.toggle-option[data-unit]');
+            const confirmBtn = body.querySelector('button.confirm');
+            const cancelBtn = body.querySelector('button.cancel');
+
+            // 更新输入框占位符
+            if (nameInput) {
+                nameInput.placeholder = i18n[this.currentLang].placeholders.playerName;
+            }
+            if (balanceInput) {
+                balanceInput.placeholder = i18n[this.currentLang].placeholders.newPlayerBalance;
+            }
+
+            // 更新单位按钮文字
+            unitBtns.forEach(btn => {
+                const unit = btn.dataset.unit;
+                btn.textContent = i18n[this.currentLang].units[unit === 'M' ? 'million' : 'thousand'];
+            });
+
+            // 更新按钮文字
+            if (confirmBtn) confirmBtn.textContent = i18n[this.currentLang].buttons.confirm;
+            if (cancelBtn) cancelBtn.textContent = i18n[this.currentLang].buttons.cancel;
+        }
     }
 
     updateGameHistory() {
@@ -378,23 +509,24 @@ class MonopolyBookkeeper {
         const title = document.getElementById('modal-title');
         const body = document.getElementById('modal-body');
 
-        title.textContent = '转账';
+        title.textContent = i18n[this.currentLang].buttons.transfer;
+        title.dataset.modalType = 'transfer';
         body.innerHTML = `
             <div class="amount-input-group">
-                <label>从 ${fromPlayer.name} 转账到 ${toPlayer.name}</label>
+                <label data-from-player="${fromPlayer.name}" data-to-player="${toPlayer.name}">${i18n[this.currentLang].gameLog.transfer.replace('{fromPlayer}', fromPlayer.name).replace('{toPlayer}', toPlayer.name).replace('{amount}', '').replace('{unit}', '')}</label>
                 <div class="amount-input-row">
-                    <input type="number" id="transfer-amount" placeholder="输入转账金额" min="0" step="1">
+                    <input type="number" id="transfer-amount" placeholder="${i18n[this.currentLang].placeholders.editAmount}" min="0" step="1">
                     <div class="unit-toggle">
                         <div class="toggle-container">
-                            <button class="toggle-option active" data-unit="M">百万(M)</button>
-                            <button class="toggle-option" data-unit="K">千(K)</button>
+                            <button class="toggle-option active" data-unit="M">${i18n[this.currentLang].units.million}</button>
+                            <button class="toggle-option" data-unit="K">${i18n[this.currentLang].units.thousand}</button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-buttons">
-                <button class="confirm" onclick="game.confirmTransfer(${fromPlayer.id}, ${toPlayer.id})">确认转账</button>
-                <button class="cancel" onclick="game.closeModal()">取消</button>
+                <button class="confirm" onclick="game.confirmTransfer(${fromPlayer.id}, ${toPlayer.id})">${i18n[this.currentLang].buttons.confirm}</button>
+                <button class="cancel" onclick="game.closeModal()">${i18n[this.currentLang].buttons.cancel}</button>
             </div>
         `;
 
@@ -448,29 +580,30 @@ class MonopolyBookkeeper {
 
         const currentBalance = player.balance;
 
-        title.textContent = '修改余额';
+        title.textContent = i18n[this.currentLang].labels.editBalance.replace('{playerName}', player.name);
+        title.dataset.modalType = 'editBalance';
         body.innerHTML = `
             <div class="amount-input-group">
-                <label>${player.name} 当前余额: ${this.formatAmount(currentBalance)}</label>
+                <label data-player-name="${player.name}" data-current-balance="${currentBalance}">${i18n[this.currentLang].labels.editBalance.replace('{playerName}', player.name)}: ${this.formatAmount(currentBalance)}</label>
                 <div class="amount-input-row">
-                    <input type="number" id="edit-amount" placeholder="输入变动金额" min="0" step="1" value="0">
+                    <input type="number" id="edit-amount" placeholder="${i18n[this.currentLang].placeholders.editAmount}" min="0" step="1" value="0">
                     <div class="unit-toggle">
                         <div class="toggle-container">
-                            <button class="toggle-option active" data-unit="M">百万(M)</button>
-                            <button class="toggle-option" data-unit="K">千(K)</button>
+                            <button class="toggle-option active" data-unit="M">${i18n[this.currentLang].units.million}</button>
+                            <button class="toggle-option" data-unit="K">${i18n[this.currentLang].units.thousand}</button>
                         </div>
                     </div>
                 </div>
                 <div class="operation-toggle">
                     <div class="toggle-container">
-                        <button class="toggle-option active" data-operation="add">增加 +</button>
-                        <button class="toggle-option" data-operation="subtract">减少 -</button>
+                        <button class="toggle-option active" data-operation="add">${i18n[this.currentLang].operations.add}</button>
+                        <button class="toggle-option" data-operation="subtract">${i18n[this.currentLang].operations.subtract}</button>
                     </div>
                 </div>
             </div>
             <div class="modal-buttons">
-                <button class="confirm" onclick="game.confirmEditBalance(${player.id})">确认</button>
-                <button class="cancel" onclick="game.closeModal()">取消</button>
+                <button class="confirm" onclick="game.confirmEditBalance(${player.id})">${i18n[this.currentLang].buttons.confirm}</button>
+                <button class="cancel" onclick="game.closeModal()">${i18n[this.currentLang].buttons.cancel}</button>
             </div>
         `;
 
@@ -537,33 +670,41 @@ class MonopolyBookkeeper {
         const body = document.getElementById('modal-body');
 
         const defaultAmount = this.initialAmount;
-        title.textContent = '添加玩家';
+        title.textContent = i18n[this.currentLang].buttons.addPlayerGame;
+        title.dataset.modalType = 'addPlayer';
         body.innerHTML = `
             <div class="amount-input-group">
-                <label>玩家名称</label>
-                <input type="text" id="new-game-player-name" placeholder="输入玩家名称">
+                <label>${i18n[this.currentLang].labels.playerName}</label>
+                <input type="text" id="new-game-player-name" placeholder="${i18n[this.currentLang].placeholders.playerName}">
             </div>
             <div class="amount-input-group">
-                <label>初始余额 (可选，默认为${defaultAmount}${this.amountUnit})</label>
+                <label>${i18n[this.currentLang].labels.newPlayerBalance.replace('{defaultAmount}', defaultAmount).replace('{unit}', this.amountUnit)}</label>
                 <div class="amount-input-row">
-                    <input type="number" id="new-player-balance" placeholder="留空则使用默认初始金额" min="0" step="1">
+                    <input type="number" id="new-player-balance" placeholder="${i18n[this.currentLang].placeholders.newPlayerBalance}" min="0" step="1">
                     <div class="unit-toggle">
                         <div class="toggle-container">
-                            <button class="toggle-option active" data-unit="M">百万(M)</button>
-                            <button class="toggle-option" data-unit="K">千(K)</button>
+                            <button class="toggle-option active" data-unit="M">${i18n[this.currentLang].units.million}</button>
+                            <button class="toggle-option" data-unit="K">${i18n[this.currentLang].units.thousand}</button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-buttons">
-                <button class="confirm" onclick="game.confirmAddPlayer()">确认</button>
-                <button class="cancel" onclick="game.closeModal()">取消</button>
+                <button class="confirm" onclick="game.confirmAddPlayer()">${i18n[this.currentLang].buttons.confirm}</button>
+                <button class="cancel" onclick="game.closeModal()">${i18n[this.currentLang].buttons.cancel}</button>
             </div>
         `;
 
         modal.classList.remove('hidden');
-        document.getElementById('new-game-player-name').focus();
-        this.setupToggleToggle(document.querySelector('#new-player-balance ~ .unit-toggle .toggle-container'));
+
+        // 聚焦到玩家名称输入框
+        const nameInput = document.getElementById('new-game-player-name');
+        if (nameInput) {
+            nameInput.focus();
+        }
+
+        // 立即更新模态框内容
+        this.updateModalContent();
     }
 
     confirmAddPlayer() {
@@ -635,7 +776,7 @@ class MonopolyBookkeeper {
     }
 
     restartGame() {
-        if (confirm('确定要重新开始游戏吗？所有余额将被重置。')) {
+        if (confirm(i18n[this.currentLang].messages.confirmRestart || '确定要重新开始游戏吗？所有余额将被重置。')) {
             this.players.forEach(player => {
                 player.balance = this.initialAmount * (this.amountUnit === 'K' ? 1000 : 1000000);
             });
@@ -744,19 +885,34 @@ class MonopolyBookkeeper {
         let actionText = '';
         switch (logEntry.actionType) {
             case 'transfer':
-                actionText = `${logEntry.details.fromPlayer} 转账 ${logEntry.details.amount}${logEntry.details.unit} 给 ${logEntry.details.toPlayer}`;
+                actionText = i18n[this.currentLang].gameLog.transfer
+                    .replace('{fromPlayer}', logEntry.details.fromPlayer)
+                    .replace('{toPlayer}', logEntry.details.toPlayer)
+                    .replace('{amount}', logEntry.details.amount)
+                    .replace('{unit}', logEntry.details.unit);
                 break;
             case 'balance_adjust':
-                actionText = `${logEntry.details.playerName} ${logEntry.details.operation} ${logEntry.details.amount}${logEntry.details.unit}`;
+                actionText = i18n[this.currentLang].gameLog.balanceAdjust
+                    .replace('{playerName}', logEntry.details.playerName)
+                    .replace('{operation}', logEntry.details.operation)
+                    .replace('{amount}', logEntry.details.amount)
+                    .replace('{unit}', logEntry.details.unit);
                 break;
             case 'add_player':
-                actionText = `添加玩家 ${logEntry.details.playerName}，初始余额 ${logEntry.details.amount}${logEntry.details.unit}`;
+                actionText = i18n[this.currentLang].gameLog.addPlayer
+                    .replace('{playerName}', logEntry.details.playerName)
+                    .replace('{amount}', logEntry.details.amount)
+                    .replace('{unit}', logEntry.details.unit);
                 break;
             case 'game_start':
-                actionText = `游戏开始，初始金额 ${logEntry.details.initialAmount}${logEntry.details.unit}`;
+                actionText = i18n[this.currentLang].gameLog.gameStart
+                    .replace('{initialAmount}', logEntry.details.initialAmount)
+                    .replace('{unit}', logEntry.details.unit);
                 break;
             case 'game_restart':
-                actionText = `重新开始游戏，所有余额重置为 ${logEntry.details.initialAmount}${logEntry.details.unit}`;
+                actionText = i18n[this.currentLang].gameLog.gameRestart
+                    .replace('{initialAmount}', logEntry.details.initialAmount)
+                    .replace('{unit}', logEntry.details.unit);
                 break;
         }
 
@@ -814,7 +970,7 @@ class MonopolyBookkeeper {
     }
 
     clearAllData() {
-        if (confirm('确定要清除所有数据吗？这将删除所有玩家信息、游戏历史、操作日志和设置。此操作不可恢复！')) {
+        if (confirm(i18n[this.currentLang].messages.confirmClearData)) {
             localStorage.removeItem('monopolyPlayerData');
             localStorage.removeItem('monopolyGameHistory');
 
@@ -858,7 +1014,7 @@ class MonopolyBookkeeper {
         const sortedLogs = [...this.currentGameLog].reverse();
 
         if (sortedLogs.length === 0) {
-            historyContainer.innerHTML = '<p style="color: #718096; text-align: center;">暂无操作记录</p>';
+            historyContainer.innerHTML = `<p style="color: #718096; text-align: center;">${i18n[this.currentLang].gameLog.noOperationRecords}</p>`;
             return;
         }
 
@@ -881,7 +1037,7 @@ class MonopolyBookkeeper {
     }
 
     clearCurrentHistory() {
-        if (confirm('确定要清除当前游戏的操作记录吗？')) {
+        if (confirm(i18n[this.currentLang].messages.confirmClearHistory)) {
             this.currentGameLog = [];
             this.updateRealTimeHistory();
         }
